@@ -7,7 +7,10 @@ angular.module('flapperNews', ['ui.router'])
       .state('home', {
         url: '/home',
         templateUrl: '/home.html',
-        controller: 'MainCtrl'
+        controller: 'MainCtrl',
+        resolve: ['posts', function(posts) {
+          return posts.getAll();
+        }]
       })
       .state('posts', {
         url: '/posts/{id}',
@@ -17,7 +20,7 @@ angular.module('flapperNews', ['ui.router'])
 
     $urlRouterProvider.otherwise('home');
   }])
-.factory('posts', [function(){
+.factory('posts', ['$http', function($http){
   var o = {
     posts: [
       {title: 'post 1', upvotes: 5},
@@ -27,6 +30,25 @@ angular.module('flapperNews', ['ui.router'])
       {title: 'post 5', upvotes: 4},
     ]
   };
+
+  o.getAll = function() {
+    return $http.get('/posts').success(function(data) {
+      angular.copy(data, o.posts);
+    });
+  };
+
+  o.create = function(post) {
+    return $http.post('/posts', post).success(function(data) {
+      o.posts.push(data);
+    });
+  };
+
+  o.upvote = function(post) {
+    return $http.put('/posts/' + post._id + '/upvote').success(function(data) {
+      post.upvotes += 1;
+    });
+  };
+
   return o;
 }])
 .controller('MainCtrl', ['$scope', 'posts', function($scope, posts){
@@ -36,20 +58,16 @@ angular.module('flapperNews', ['ui.router'])
     if ($scope.title === '') {
       return;
     }
-    $scope.posts.push({
+    posts.create({
       title: $scope.title,
       link: $scope.link,
-      upvotes: 0,
-      comments: [
-        {author: 'Joe', body: 'Cool post!', upvotes: 0},
-        {author: 'Bob', body: 'Great but wrong!', upvotes: 0}
-      ]
     });
     $scope.title = '';
+    $scope.link = '';
   };
 
   $scope.incrementUpvotes = function(post) {
-    post.upvotes += 1;
+    posts.upvote(post);
   };
 }])
 .controller('PostsCtrl', ['$scope', '$stateParams', 'posts', function($scope, $stateParams, posts){
