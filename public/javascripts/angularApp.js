@@ -15,7 +15,12 @@ angular.module('flapperNews', ['ui.router'])
       .state('posts', {
         url: '/posts/{id}',
         templateUrl: '/posts.html',
-        controller: 'PostsCtrl'
+        controller: 'PostsCtrl',
+        resolve: {
+          post: ['$stateParams', 'posts', function($stateParams, posts) {
+            return posts.get($stateParams.id);
+          }]
+        }
       });
 
     $urlRouterProvider.otherwise('home');
@@ -23,11 +28,11 @@ angular.module('flapperNews', ['ui.router'])
 .factory('posts', ['$http', function($http){
   var o = {
     posts: [
-      {title: 'post 1', upvotes: 5},
-      {title: 'post 2', upvotes: 2},
-      {title: 'post 3', upvotes: 15},
-      {title: 'post 4', upvotes: 9},
-      {title: 'post 5', upvotes: 4},
+      // {title: 'post 1', upvotes: 5},
+      // {title: 'post 2', upvotes: 2},
+      // {title: 'post 3', upvotes: 15},
+      // {title: 'post 4', upvotes: 9},
+      // {title: 'post 5', upvotes: 4},
     ]
   };
 
@@ -46,6 +51,22 @@ angular.module('flapperNews', ['ui.router'])
   o.upvote = function(post) {
     return $http.put('/posts/' + post._id + '/upvote').success(function(data) {
       post.upvotes += 1;
+    });
+  };
+
+  o.get = function(id) {
+    return $http.get('/posts/' + id).then(function(res) {
+      return res.data;
+    });
+  };
+
+  o.addComment = function(post, comment) {
+    return $http.post('/posts/' + post._id + '/comments', comment);
+  };
+
+  o.upvoteComment = function(post, comment) {
+    return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/upvote').success(function(data) {
+      comment.upvotes += 1;
     });
   };
 
@@ -70,21 +91,22 @@ angular.module('flapperNews', ['ui.router'])
     posts.upvote(post);
   };
 }])
-.controller('PostsCtrl', ['$scope', '$stateParams', 'posts', function($scope, $stateParams, posts){
-  $scope.post = posts.posts[$stateParams.id];
+.controller('PostsCtrl', ['$scope', 'posts', 'post', function($scope, posts, post){
+  $scope.post = post;
 
-  $scope.incrementUpvotes = function(post) {
-    post.upvotes += 1;
+  $scope.incrementUpvotes = function(comment) {
+    posts.upvoteComment(post, comment);
   };
 
   $scope.addComment = function(){
     if ($scope.body === '') {
       return;
     }
-    $scope.post.comments.push({
+    posts.addComment(post, {
       body: $scope.body,
-      author: 'user',
-      upvotes: 0
+      author: 'user'
+    }).success(function(comment) {
+      $scope.post.comments.push(comment);
     });
     $scope.body = '';
   };
