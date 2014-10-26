@@ -39,6 +39,9 @@
         <span>
           <a href="#/posts/{{ post._id }}">Comments</a>
         </span>
+        <span class="mute" ng-show="post.comments">
+          {{ ' (' + post.comments.length + ')' }}
+        </span>
       </div>
 
       <form ng-submit="addPost()" style="margin-top:30px;">
