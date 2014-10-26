@@ -93,9 +93,11 @@ angular.module('flapperNews', ['ui.router'])
       return;
     }
     posts.create({
+      author: $scope.author,
       title: $scope.title,
       link: $scope.link,
     });
+    $scope.author = '';
     $scope.title = '';
     $scope.link = '';
   };
@@ -130,11 +132,12 @@ angular.module('flapperNews', ['ui.router'])
     }
     posts.addComment(post, {
       body: $scope.body,
-      author: 'user'
+      author: $scope.author
     }).success(function(comment) {
       $scope.post.comments.push(comment);
     });
     $scope.body = '';
+    $scope.author = '';
   };
 
   $scope.toggleForm = function() {

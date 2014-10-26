@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 
 var PostSchema = new mongoose.Schema({
+  author: {type: String, default: 'anon'},
   title: String,
   link: String,
   upvotes: {type: Number, default: 0},
